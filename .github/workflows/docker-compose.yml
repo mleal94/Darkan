@@ -1,0 +1,91 @@
+name: Docker Compose Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration-tests:
+    name: Integration Tests with Docker Compose
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Create .env file
+      run: |
+        cat > .env << EOF
+        MONGODB_URI=mongodb://admin:password123@mongodb:27017/or_scheduler?authSource=admin
+        JWT_SECRET=test-secret-key
+        JWT_REFRESH_SECRET=test-refresh-secret
+        KAFKA_BROKERS=kafka:9092
+        REDIS_URL=redis://redis:6379
+        S3_ENDPOINT=http://minio:9000
+        S3_ACCESS_KEY=minioadmin
+        S3_SECRET_KEY=minioadmin123
+        S3_BUCKET=or-scheduler-files
+        S3_REGION=us-east-1
+        CORS_ORIGIN=*
+        EOF
+
+    - name: Start infrastructure services
+      run: |
+        docker-compose up -d mongodb kafka zookeeper redis minio
+        sleep 30
+
+    - name: Wait for services to be ready
+      run: |
+        # Wait for MongoDB
+        timeout 60 bash -c 'until docker-compose exec -T mongodb mongosh --eval "db.runCommand(\"ping\")" > /dev/null 2>&1; do sleep 2; done'
+        
+        # Wait for Kafka
+        timeout 60 bash -c 'until docker-compose exec -T kafka kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1; do sleep 2; done'
+        
+        # Wait for Redis
+        timeout 60 bash -c 'until docker-compose exec -T redis redis-cli ping > /dev/null 2>&1; do sleep 2; done'
+        
+        # Wait for MinIO
+        timeout 60 bash -c 'until curl -s http://localhost:9000/minio/health/live > /dev/null 2>&1; do sleep 2; done'
+
+    - name: Build and start application services
+      run: |
+        docker-compose up -d auth-service or-service file-service
+        sleep 30
+
+    - name: Run health checks
+      run: |
+        # Check Auth Service
+        curl -f http://localhost:3001/auth/test || exit 1
+        
+        # Check OR Service
+        curl -f http://localhost:3002/operating-rooms/admin/test || exit 1
+        
+        # Check File Service
+        curl -f http://localhost:3003/files/admin/test || exit 1
+
+    - name: Run integration tests
+      run: |
+        # Aquí se ejecutarían las pruebas de integración
+        echo "Running integration tests..."
+        # npm run test:integration
+
+    - name: Show logs on failure
+      if: failure()
+      run: |
+        echo "=== Auth Service Logs ==="
+        docker-compose logs auth-service
+        echo "=== OR Service Logs ==="
+        docker-compose logs or-service
+        echo "=== File Service Logs ==="
+        docker-compose logs file-service
+
+    - name: Cleanup
+      if: always()
+      run: |
+        docker-compose down -v

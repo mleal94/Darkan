@@ -1,0 +1,55 @@
+{
+  "name": "operating-room-scheduler",
+  "version": "1.0.0",
+  "description": "Sistema de microservicios para reserva de quirófanos con arquitectura event-driven",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "start": "npm run start --workspaces",
+    "start:dev": "concurrently \"npm run start:dev --workspace=services/auth-service\" \"npm run start:dev --workspace=services/or-service\" \"npm run start:dev --workspace=services/file-service\"",
+    "start:auth": "npm run start:dev --workspace=services/auth-service",
+    "start:or": "npm run start:dev --workspace=services/or-service",
+    "start:file": "npm run start:dev --workspace=services/file-service",
+    "start:prod": "npm run start:prod --workspaces",
+    "test": "npm run test --workspaces",
+    "test:e2e": "npm run test:e2e --workspaces",
+    "test:cov": "npm run test:cov --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:restart": "docker-compose restart",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:auth": "docker-compose logs -f auth-service",
+    "docker:logs:or": "docker-compose logs -f or-service",
+    "docker:logs:file": "docker-compose logs -f file-service",
+    "docker:status": "docker-compose ps",
+    "kafka:topics": "docker exec or-scheduler-kafka kafka-topics --bootstrap-server localhost:9092 --list",
+    "kafka:create-topics": "docker exec or-scheduler-kafka kafka-topics --create --bootstrap-server localhost:9092 --topic reservation.created --partitions 3 --replication-factor 1 && docker exec or-scheduler-kafka kafka-topics --create --bootstrap-server localhost:9092 --topic reservation.updated --partitions 3 --replication-factor 1 && docker exec or-scheduler-kafka kafka-topics --create --bootstrap-server localhost:9092 --topic reservation.cancelled --partitions 3 --replication-factor 1 && docker exec or-scheduler-kafka kafka-topics --create --bootstrap-server localhost:9092 --topic file.attached --partitions 3 --replication-factor 1 && docker exec or-scheduler-kafka kafka-topics --create --bootstrap-server localhost:9092 --topic user.updated --partitions 3 --replication-factor 1",
+    "health:check": "curl -f http://localhost:3001/auth/test && curl -f http://localhost:3002/operating-rooms/admin/test && curl -f http://localhost:3003/files/admin/test",
+    "clean": "rm -rf node_modules services/*/node_modules services/*/dist && npm install",
+    "clean:logs": "rm -rf logs/*.log",
+    "setup": "npm install && npm run docker:up && sleep 30 && npm run kafka:create-topics && npm run build",
+    "dev": "npm run docker:up && sleep 10 && npm run start:dev",
+    "stop": "pkill -f 'nest start' || true",
+    "restart": "npm run stop && npm run start:dev"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
