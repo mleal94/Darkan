@@ -142,14 +142,16 @@ npm run start
 
 ## 📚 API Endpoints
 
-### Auth Service
+### Auth Service (Puerto 3001)
 
+#### Autenticación
 ```bash
-# Registro
+# Registro (sin tokens)
 POST /auth/register
+Content-Type: application/json
 {
   "email": "user@hospital.com",
-  "password": "password123",
+  "password": "Password123",
   "firstName": "Juan",
   "lastName": "Pérez",
   "role": "surgeon"
@@ -157,67 +159,277 @@ POST /auth/register
 
 # Login
 POST /auth/login
+Content-Type: application/json
 {
   "email": "user@hospital.com",
-  "password": "password123"
+  "password": "Password123"
 }
 
 # Refresh Token
 POST /auth/refresh
+Content-Type: application/json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
+
+# Logout
+POST /auth/logout
+Authorization: Bearer <access_token>
+
+# Test endpoint
+POST /auth/test
 ```
 
-### OR Service
-
+#### Gestión de Usuarios
 ```bash
-# Crear Reserva
-POST /reservations
-Headers: {
-  "Authorization": "Bearer <token>",
-  "Idempotency-Key": "unique-key-123"
-}
+# Crear usuario (solo admin)
+POST /users
+Authorization: Bearer <admin_token>
+Content-Type: application/json
 {
-  "operatingRoomId": "64f1a2b3c4d5e6f7g8h9i0j1",
-  "surgeonId": "64f1a2b3c4d5e6f7g8h9i0j2",
+  "email": "user@hospital.com",
+  "password": "Password123",
+  "firstName": "Juan",
+  "lastName": "Pérez",
+  "role": "surgeon"
+}
+
+# Obtener todos los usuarios (admin/scheduler)
+GET /users
+Authorization: Bearer <token>
+
+# Obtener usuario actual
+GET /users/me
+Authorization: Bearer <token>
+
+# Obtener usuario por ID (admin/scheduler)
+GET /users/:id
+Authorization: Bearer <token>
+
+# Actualizar usuario (solo admin)
+PATCH /users/:id
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+{
+  "firstName": "Juan Carlos",
+  "lastName": "Pérez García",
+  "isActive": true
+}
+
+# Eliminar usuario (solo admin)
+DELETE /users/:id
+Authorization: Bearer <admin_token>
+
+# Test endpoint
+GET /users/admin/test
+Authorization: Bearer <token>
+```
+
+**Roles disponibles:** `admin`, `scheduler`, `surgeon`
+**Validaciones de contraseña:** Mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número
+
+### OR Service (Puerto 3002)
+
+#### Quirófanos
+```bash
+# Crear quirófano (admin/scheduler)
+POST /operating-rooms
+Authorization: Bearer <token>
+Content-Type: application/json
+{
+  "name": "Quirófano 1",
+  "description": "Quirófano principal para cirugías generales",
+  "location": {
+    "floor": 2,
+    "wing": "A",
+    "roomNumber": "OR-201"
+  },
+  "capacity": {
+    "maxPatients": 1,
+    "maxStaff": 8
+  },
+  "equipment": [
+    {
+      "name": "Monitor de signos vitales",
+      "type": "monitoring",
+      "isRequired": true
+    },
+    {
+      "name": "Máquina de anestesia",
+      "type": "anesthesia",
+      "isRequired": true
+    }
+  ],
+  "isActive": true,
+  "maxReservationsPerDay": 4
+}
+
+# Obtener todos los quirófanos
+GET /operating-rooms
+Authorization: Bearer <token>
+
+# Obtener quirófanos activos
+GET /operating-rooms/active
+Authorization: Bearer <token>
+
+# Obtener quirófano por ID
+GET /operating-rooms/:id
+Authorization: Bearer <token>
+
+# Actualizar quirófano (admin/scheduler)
+PATCH /operating-rooms/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+{
+  "name": "Quirófano 1 - Actualizado",
+  "isActive": true,
+  "maxReservationsPerDay": 6
+}
+
+# Eliminar quirófano (solo admin)
+DELETE /operating-rooms/:id
+Authorization: Bearer <admin_token>
+
+# Test endpoint
+GET /operating-rooms/admin/test
+Authorization: Bearer <token>
+```
+
+#### Reservas
+```bash
+# Crear reserva
+POST /reservations
+Authorization: Bearer <token>
+Idempotency-Key: unique-key-123
+Content-Type: application/json
+{
+  "operatingRoomId": "507f1f77bcf86cd799439011",
+  "surgeonId": "507f1f77bcf86cd799439012",
   "startTime": "2024-01-15T09:00:00Z",
   "endTime": "2024-01-15T11:00:00Z",
   "type": "surgery",
   "description": "Cirugía de apendicectomía",
-  "patientName": "Ana García"
+  "patientName": "Ana García",
+  "patientId": "P123456",
+  "notes": "Paciente con alergia a penicilina",
+  "isRecurring": false
 }
 
-# Verificar Disponibilidad
+# Verificar disponibilidad
 POST /reservations/check-availability
+Authorization: Bearer <token>
+Content-Type: application/json
 {
-  "operatingRoomId": "64f1a2b3c4d5e6f7g8h9i0j1",
-  "surgeonId": "64f1a2b3c4d5e6f7g8h9i0j2",
+  "operatingRoomId": "507f1f77bcf86cd799439011",
+  "surgeonId": "507f1f77bcf86cd799439012",
   "startTime": "2024-01-15T09:00:00Z",
   "endTime": "2024-01-15T11:00:00Z"
 }
+
+# Obtener todas las reservas (admin/scheduler)
+GET /reservations
+Authorization: Bearer <token>
+
+# Obtener mis reservas
+GET /reservations/my-reservations
+Authorization: Bearer <token>
+
+# Obtener reservas por quirófano (admin/scheduler)
+GET /reservations/operating-room/:operatingRoomId
+Authorization: Bearer <token>
+
+# Obtener reservas por cirujano (admin/scheduler)
+GET /reservations/surgeon/:surgeonId
+Authorization: Bearer <token>
+
+# Obtener reserva por ID
+GET /reservations/:id
+Authorization: Bearer <token>
+
+# Actualizar reserva (admin/scheduler)
+PATCH /reservations/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+{
+  "startTime": "2024-01-15T10:00:00Z",
+  "endTime": "2024-01-15T12:00:00Z",
+  "description": "Descripción actualizada",
+  "status": "confirmed",
+  "notes": "Reserva confirmada por el cirujano"
+}
+
+# Cancelar reserva (admin/scheduler)
+DELETE /reservations/:id?reason=Motivo de cancelación
+Authorization: Bearer <token>
+
+# Test endpoint
+GET /reservations/admin/test
+Authorization: Bearer <token>
 ```
 
-### File Service
+**Tipos de reserva:** `surgery`, `consultation`, `emergency`, `maintenance`
+**Estados de reserva:** `pending`, `confirmed`, `cancelled`, `expired`
 
+### File Service (Puerto 3003)
+
+#### Gestión de Archivos
 ```bash
-# Obtener URL de Subida
+# Obtener URL de subida
 POST /files/presign
+Authorization: Bearer <token>
+Content-Type: application/json
 {
-  "reservationId": "64f1a2b3c4d5e6f7g8h9i0j3",
+  "reservationId": "507f1f77bcf86cd799439013",
   "type": "consent",
   "originalName": "consentimiento.pdf",
   "mimeType": "application/pdf",
-  "description": "Consentimiento informado"
+  "description": "Consentimiento informado",
+  "tags": ["consentimiento", "cirugia"],
+  "isPublic": false,
+  "size": 1024000
 }
 
-# Confirmar Subida
+# Confirmar subida
 POST /files/confirm-upload
+Authorization: Bearer <token>
+Content-Type: application/json
 {
-  "fileId": "64f1a2b3c4d5e6f7g8h9i0j4",
+  "fileId": "507f1f77bcf86cd799439014",
   "etag": "d41d8cd98f00b204e9800998ecf8427e"
 }
+
+# Obtener todos los archivos (admin/scheduler)
+GET /files
+Authorization: Bearer <token>
+
+# Obtener mis archivos
+GET /files/my-files
+Authorization: Bearer <token>
+
+# Obtener archivos por reserva
+GET /files/reservation/:reservationId
+Authorization: Bearer <token>
+
+# Obtener archivo por ID
+GET /files/:id
+Authorization: Bearer <token>
+
+# Obtener URL de descarga
+GET /files/:id/download
+Authorization: Bearer <token>
+
+# Eliminar archivo
+DELETE /files/:id
+Authorization: Bearer <token>
+
+# Test endpoint
+GET /files/admin/test
+Authorization: Bearer <token>
 ```
+
+**Tipos de archivo:** `consent`, `study`, `image`, `document`, `other`
+**Estados de archivo:** `uploading`, `uploaded`, `processing`, `ready`, `error`, `deleted`
+**Tamaño máximo:** 10MB por archivo
 
 ## 🔐 Autenticación y Roles
 
@@ -236,7 +448,114 @@ POST /files/confirm-upload
 | Actualizar reservas | ✅ | ✅ | ❌ |
 | Eliminar reservas | ✅ | ✅ | ❌ |
 | Gestionar usuarios | ✅ | ❌ | ❌ |
+| Gestionar quirófanos | ✅ | ✅ | ❌ |
 | Subir archivos | ✅ | ✅ | ✅ |
+
+### gRPC Endpoints (Auth Service)
+
+```bash
+# GetUserById
+gRPC: auth.AuthService/GetUserById
+{
+  "userId": "507f1f77bcf86cd799439011"
+}
+
+# GetUserPermissions
+gRPC: auth.AuthService/GetUserPermissions
+{
+  "userId": "507f1f77bcf86cd799439011"
+}
+
+# ValidateToken
+gRPC: auth.AuthService/ValidateToken
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Puerto gRPC:** 5001 (Auth Service)
+
+## 📋 Ejemplos de Respuestas
+
+### Auth Service - Login Response
+```json
+{
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "email": "user@hospital.com",
+    "firstName": "Juan",
+    "lastName": "Pérez",
+    "role": "surgeon",
+    "isActive": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "lastLoginAt": "2024-01-15T10:30:00Z"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### OR Service - Operating Room Response
+```json
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "Quirófano 1",
+  "description": "Quirófano principal para cirugías generales",
+  "location": {
+    "floor": 2,
+    "wing": "A",
+    "roomNumber": "OR-201"
+  },
+  "capacity": {
+    "maxPatients": 1,
+    "maxStaff": 8
+  },
+  "equipment": [
+    {
+      "name": "Monitor de signos vitales",
+      "type": "monitoring",
+      "isRequired": true
+    }
+  ],
+  "isActive": true,
+  "maxReservationsPerDay": 4,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+### OR Service - Reservation Response
+```json
+{
+  "id": "507f1f77bcf86cd799439013",
+  "operatingRoomId": "507f1f77bcf86cd799439011",
+  "surgeonId": "507f1f77bcf86cd799439012",
+  "startTime": "2024-01-15T09:00:00Z",
+  "endTime": "2024-01-15T11:00:00Z",
+  "status": "pending",
+  "type": "surgery",
+  "description": "Cirugía de apendicectomía",
+  "patientName": "Ana García",
+  "patientId": "P123456",
+  "notes": "Paciente con alergia a penicilina",
+  "isRecurring": false,
+  "version": 1,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+### File Service - Presigned URL Response
+```json
+{
+  "uploadUrl": "https://s3.amazonaws.com/bucket/path/to/file?signature...",
+  "key": "reservations/507f1f77bcf86cd799439013/consentimiento.pdf",
+  "expiresIn": 3600,
+  "fileId": "507f1f77bcf86cd799439014",
+  "expiresAt": "2024-01-15T11:30:00Z"
+}
+```
 
 ## 🐳 Docker
 
