@@ -5,6 +5,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthGrpcService } from './services/auth-grpc.service';
+import { StaffGrpcService } from './services/staff-grpc.service';
 
 @Global()
 @Module({
@@ -19,9 +20,18 @@ import { AuthGrpcService } from './services/auth-grpc.service';
           url: process.env.AUTH_SERVICE_GRPC_URL || 'localhost:5001',
         },
       },
+      {
+        name: 'STAFF_SERVICE',
+        transport: Transport.GRPC,
+        options: {
+          package: 'staff',
+          protoPath: join(__dirname, '../../proto/staff.proto'),
+          url: process.env.STAFF_SERVICE_GRPC_URL || 'localhost:5002',
+        },
+      },
     ]),
   ],
-  providers: [JwtStrategy, JwtAuthGuard, RolesGuard, AuthGrpcService],
-  exports: [JwtStrategy, JwtAuthGuard, RolesGuard, AuthGrpcService],
+  providers: [JwtStrategy, JwtAuthGuard, RolesGuard, AuthGrpcService, StaffGrpcService],
+  exports: [JwtStrategy, JwtAuthGuard, RolesGuard, AuthGrpcService, StaffGrpcService],
 })
 export class CommonModule {}

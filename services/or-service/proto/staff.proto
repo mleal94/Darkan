@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package staff;
+
+service StaffService {
+  rpc CheckStaffAvailability(CheckStaffAvailabilityRequest) returns (CheckStaffAvailabilityResponse);
+  rpc GetStaffSchedule(GetStaffScheduleRequest) returns (GetStaffScheduleResponse);
+  rpc ValidateStaffAssignment(ValidateStaffAssignmentRequest) returns (ValidateStaffAssignmentResponse);
+}
+
+message CheckStaffAvailabilityRequest {
+  string staffId = 1;
+  int64 startTime = 2;
+  int64 endTime = 3;
+  string staffType = 4;
+}
+
+message CheckStaffAvailabilityResponse {
+  bool available = 1;
+  string reason = 2;
+  repeated TimeSlot conflicts = 3;
+  StaffInfo staffInfo = 4;
+}
+
+message TimeSlot {
+  int64 startTime = 1;
+  int64 endTime = 2;
+  string reservationId = 3;
+  string description = 4;
+}
+
+message StaffInfo {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string role = 4;
+  string department = 5;
+  bool isActive = 6;
+  repeated string specializations = 7;
+  int32 maxConcurrentReservations = 8;
+  int32 currentReservations = 9;
+}
+
+message GetStaffScheduleRequest {
+  string staffId = 1;
+  int64 startDate = 2;
+  int64 endDate = 3;
+}
+
+message GetStaffScheduleResponse {
+  string staffId = 1;
+  repeated ScheduleEntry schedule = 2;
+}
+
+message ScheduleEntry {
+  int64 startTime = 1;
+  int64 endTime = 2;
+  string reservationId = 3;
+  string operatingRoomId = 4;
+  string patientName = 5;
+  string surgeryType = 6;
+  string status = 7;
+}
+
+message ValidateStaffAssignmentRequest {
+  string staffId = 1;
+  string operatingRoomId = 2;
+  int64 startTime = 3;
+  int64 endTime = 4;
+  string surgeryType = 5;
+}
+
+message ValidateStaffAssignmentResponse {
+  bool valid = 1;
+  string message = 2;
+  repeated string requiredSpecializations = 3;
+  repeated string staffSpecializations = 4;
+}

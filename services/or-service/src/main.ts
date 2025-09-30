@@ -28,12 +28,15 @@ async function bootstrap(): Promise<void> {
   // Configurar Socket.IO adapter
   app.useWebSocketAdapter(new IoAdapter(app));
 
-  // Configurar gRPC microservice
+  // Configurar gRPC microservice para ORService
   const grpcApp = await NestFactory.createMicroservice(AppModule, {
     transport: Transport.GRPC,
     options: {
-      package: 'or',
-      protoPath: join(__dirname, '../proto/or.proto'),
+      package: ['or', 'staff'],
+      protoPath: [
+        join(__dirname, '../proto/or.proto'),
+        join(__dirname, '../proto/staff.proto')
+      ],
       url: `0.0.0.0:${process.env.OR_SERVICE_GRPC_PORT || 5002}`,
     },
   });

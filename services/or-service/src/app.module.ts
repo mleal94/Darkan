@@ -8,6 +8,7 @@ import { KafkaModule } from './kafka/kafka.module';
 import { GrpcModule } from './grpc/grpc.module';
 import { CommonModule } from './common/common.module';
 import { OutboxModule } from './outbox/outbox.module';
+import { StaffModule } from './staff/staff.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -25,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     GrpcModule,
     CommonModule,
     OutboxModule,
+    StaffModule,
   ],
 })
 export class AppModule {}

@@ -12,6 +12,7 @@ import { ReservationStatus, ReservationType, ReservationConflict } from '../comm
 import { OperatingRoomsService } from '../operating-rooms/operating-rooms.service';
 import { KafkaService } from '../kafka/kafka.service';
 import { AuthGrpcService } from '../common/services/auth-grpc.service';
+import { StaffGrpcService } from '../common/services/staff-grpc.service';
 import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class ReservationsService {
     private operatingRoomsService: OperatingRoomsService,
     private kafkaService: KafkaService,
     private authGrpcService: AuthGrpcService,
+    private staffGrpcService: StaffGrpcService,
     private outboxService: OutboxService,  
   ) {}
 
@@ -46,8 +48,10 @@ export class ReservationsService {
       }
 
       // Validar disponibilidad del cirujano via gRPC
-      const isSurgeonAvailable = await this.authGrpcService.validateSurgeonAvailability(
-        createReservationDto.surgeonId
+      const isSurgeonAvailable = await this.staffGrpcService.validateSurgeonAvailability(
+        createReservationDto.surgeonId,
+        new Date(createReservationDto.startTime),
+        new Date(createReservationDto.endTime)
       );
       if (!isSurgeonAvailable) {
         throw new ConflictException('El cirujano no está disponible o no es válido');
