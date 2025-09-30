@@ -1,998 +1,945 @@
 {
-  "info": {
-    "name": "Complete API Testing - All Services",
-    "description": "Colección completa para probar todos los servicios: Auth, OR Service y File Service",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.0.0"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{access_token}}",
-        "type": "string"
-      }
-    ]
-  },
-  "variable": [
-    {
-      "key": "auth_base_url",
-      "value": "http://localhost:3001",
-      "type": "string"
-    },
-    {
-      "key": "or_base_url",
-      "value": "http://localhost:3002",
-      "type": "string"
-    },
-    {
-      "key": "file_base_url",
-      "value": "http://localhost:3003",
-      "type": "string"
-    },
-    {
-      "key": "access_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refresh_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "user_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "operating_room_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "reservation_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "file_id",
-      "value": "",
-      "type": "string"
-    }
-  ],
-  "item": [
-    {
-      "name": "🔐 Auth Service",
-      "item": [
-        {
-          "name": "1. Setup - Authentication",
-          "item": [
-            {
-              "name": "Register User",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201) {",
-                      "    const response = pm.response.json();",
-                      "    pm.collectionVariables.set('user_id', response.user.id);",
-                      "    console.log('User ID guardado:', response.user.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"test@hospital.com\",\n  \"password\": \"Password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"role\": \"surgeon\"\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/register",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "register"]
-                },
-                "description": "Registrar un nuevo usuario"
-              }
-            },
-            {
-              "name": "Login",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 200) {",
-                      "    const response = pm.response.json();",
-                      "    pm.collectionVariables.set('access_token', response.accessToken);",
-                      "    pm.collectionVariables.set('refresh_token', response.refreshToken);",
-                      "    pm.collectionVariables.set('user_id', response.user.id);",
-                      "    console.log('Tokens guardados');",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"test@hospital.com\",\n  \"password\": \"Password123\"\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/login",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "login"]
-                },
-                "description": "Login para obtener tokens"
-              }
-            },
-            {
-              "name": "Refresh Token",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/refresh",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "refresh"]
-                },
-                "description": "Renovar token de acceso"
-              }
-            },
-            {
-              "name": "Logout",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/logout",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "logout"]
-                },
-                "description": "Cerrar sesión"
-              }
-            }
-          ]
-        },
-        {
-          "name": "2. User Management",
-          "item": [
-            {
-              "name": "Get All Users",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{auth_base_url}}/users",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["users"]
-                },
-                "description": "Obtener todos los usuarios (admin/scheduler)"
-              }
-            },
-            {
-              "name": "Get Current User",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{auth_base_url}}/users/me",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["users", "me"]
-                },
-                "description": "Obtener usuario actual"
-              }
-            },
-            {
-              "name": "Get User by ID",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{auth_base_url}}/users/{{user_id}}",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["users", "{{user_id}}"]
-                },
-                "description": "Obtener usuario por ID"
-              }
-            },
-            {
-              "name": "Update User",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"firstName\": \"Test Updated\",\n  \"lastName\": \"User Updated\",\n  \"isActive\": true\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/users/{{user_id}}",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["users", "{{user_id}}"]
-                },
-                "description": "Actualizar usuario (solo admin)"
-              }
-            }
-          ]
-        },
-        {
-          "name": "3. gRPC Testing",
-          "item": [
-            {
-              "name": "GetUserById (gRPC)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"userId\": \"{{user_id}}\"\n}"
-                },
-                "url": {
-                  "raw": "grpc://localhost:5001/auth.AuthService/GetUserById",
-                  "protocol": "grpc",
-                  "host": ["localhost"],
-                  "port": "5001",
-                  "path": ["auth.AuthService", "GetUserById"]
-                },
-                "description": "gRPC: Obtener usuario por ID"
-              }
-            },
-            {
-              "name": "GetUserPermissions (gRPC)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"userId\": \"{{user_id}}\"\n}"
-                },
-                "url": {
-                  "raw": "grpc://localhost:5001/auth.AuthService/GetUserPermissions",
-                  "protocol": "grpc",
-                  "host": ["localhost"],
-                  "port": "5001",
-                  "path": ["auth.AuthService", "GetUserPermissions"]
-                },
-                "description": "gRPC: Obtener permisos del usuario"
-              }
-            },
-            {
-              "name": "ValidateToken (gRPC)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"token\": \"{{access_token}}\"\n}"
-                },
-                "url": {
-                  "raw": "grpc://localhost:5001/auth.AuthService/ValidateToken",
-                  "protocol": "grpc",
-                  "host": ["localhost"],
-                  "port": "5001",
-                  "path": ["auth.AuthService", "ValidateToken"]
-                },
-                "description": "gRPC: Validar token JWT"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "🏥 OR Service",
-      "item": [
-        {
-          "name": "1. Operating Rooms",
-          "item": [
-            {
-              "name": "Create Operating Room",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201) {",
-                      "    const response = pm.response.json();",
-                      "    pm.collectionVariables.set('operating_room_id', response.id);",
-                      "    console.log('Operating Room ID guardado:', response.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Quirófano Principal\",\n  \"description\": \"Quirófano principal para cirugías generales\",\n  \"location\": {\n    \"floor\": 2,\n    \"wing\": \"A\",\n    \"roomNumber\": \"OR-201\"\n  },\n  \"capacity\": {\n    \"maxPatients\": 1,\n    \"maxStaff\": 8\n  },\n  \"equipment\": [\n    {\n      \"name\": \"Monitor de signos vitales\",\n      \"type\": \"monitoring\",\n      \"isRequired\": true\n    },\n    {\n      \"name\": \"Máquina de anestesia\",\n      \"type\": \"anesthesia\",\n      \"isRequired\": true\n    }\n  ],\n  \"isActive\": true,\n  \"maxReservationsPerDay\": 4\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/operating-rooms",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["operating-rooms"]
-                },
-                "description": "Crear un quirófano"
-              }
-            },
-            {
-              "name": "Get All Operating Rooms",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 200) {",
-                      "    const response = pm.response.json();",
-                      "    if (response.length > 0 && !pm.collectionVariables.get('operating_room_id')) {",
-                      "        pm.collectionVariables.set('operating_room_id', response[0].id);",
-                      "        console.log('Operating Room ID guardado:', response[0].id);",
-                      "    }",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/operating-rooms",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["operating-rooms"]
-                },
-                "description": "Obtener todos los quirófanos"
-              }
-            },
-            {
-              "name": "Get Operating Room by ID",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/operating-rooms/{{operating_room_id}}",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["operating-rooms", "{{operating_room_id}}"]
-                },
-                "description": "Obtener quirófano por ID"
-              }
-            },
-            {
-              "name": "Update Operating Room",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Quirófano Principal - Actualizado\",\n  \"isActive\": true,\n  \"maxReservationsPerDay\": 6\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/operating-rooms/{{operating_room_id}}",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["operating-rooms", "{{operating_room_id}}"]
-                },
-                "description": "Actualizar quirófano"
-              }
-            }
-          ]
-        },
-        {
-          "name": "2. Reservations",
-          "item": [
-            {
-              "name": "Check Availability",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-15T09:00:00Z\",\n  \"endTime\": \"2024-03-15T11:00:00Z\"\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/check-availability",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "check-availability"]
-                },
-                "description": "Verificar disponibilidad"
-              }
-            },
-            {
-              "name": "Create Reservation - Surgery",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201) {",
-                      "    const response = pm.response.json();",
-                      "    pm.collectionVariables.set('reservation_id', response.id);",
-                      "    console.log('Reservation ID guardado:', response.id);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Idempotency-Key",
-                    "value": "{{$randomUUID}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-15T09:00:00Z\",\n  \"endTime\": \"2024-03-15T11:00:00Z\",\n  \"type\": \"surgery\",\n  \"description\": \"Cirugía de apendicectomía\",\n  \"patientName\": \"Ana García\",\n  \"patientId\": \"P123456\",\n  \"notes\": \"Paciente con alergia a penicilina\",\n  \"isRecurring\": false\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations"]
-                },
-                "description": "Crear reserva de cirugía"
-              }
-            },
-            {
-              "name": "Create Reservation - Consultation",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Idempotency-Key",
-                    "value": "{{$randomUUID}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-15T14:00:00Z\",\n  \"endTime\": \"2024-03-15T15:00:00Z\",\n  \"type\": \"consultation\",\n  \"description\": \"Consulta preoperatoria\",\n  \"patientName\": \"Carlos López\",\n  \"patientId\": \"P789012\",\n  \"notes\": \"Primera consulta\",\n  \"isRecurring\": false\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations"]
-                },
-                "description": "Crear reserva de consulta"
-              }
-            },
-            {
-              "name": "Get All Reservations",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations"]
-                },
-                "description": "Obtener todas las reservas"
-              }
-            },
-            {
-              "name": "Get My Reservations",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/my-reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "my-reservations"]
-                },
-                "description": "Obtener mis reservas"
-              }
-            },
-            {
-              "name": "Get Reservation by ID",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/{{reservation_id}}",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "{{reservation_id}}"]
-                },
-                "description": "Obtener reserva por ID"
-              }
-            },
-            {
-              "name": "Update Reservation",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"startTime\": \"2024-03-15T10:00:00Z\",\n  \"endTime\": \"2024-03-15T12:00:00Z\",\n  \"description\": \"Cirugía de apendicectomía - Horario actualizado\",\n  \"notes\": \"Horario modificado por solicitud del paciente\"\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/{{reservation_id}}",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "{{reservation_id}}"]
-                },
-                "description": "Actualizar reserva"
-              }
-            },
-            {
-              "name": "Confirm Reservation",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"status\": \"confirmed\",\n  \"notes\": \"Reserva confirmada por el cirujano\"\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/{{reservation_id}}",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "{{reservation_id}}"]
-                },
-                "description": "Confirmar reserva"
-              }
-            },
-            {
-              "name": "Cancel Reservation",
-              "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/{{reservation_id}}?reason=Paciente canceló la cita",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "{{reservation_id}}"],
-                  "query": [
-                    {
-                      "key": "reason",
-                      "value": "Paciente canceló la cita"
-                    }
-                  ]
-                },
-                "description": "Cancelar reserva"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "📁 File Service",
-      "item": [
-        {
-          "name": "1. File Management",
-          "item": [
-            {
-              "name": "Create Presigned URL",
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "if (pm.response.code === 201) {",
-                      "    const response = pm.response.json();",
-                      "    pm.collectionVariables.set('file_id', response.fileId);",
-                      "    console.log('File ID guardado:', response.fileId);",
-                      "}"
-                    ],
-                    "type": "text/javascript"
-                  }
-                }
-              ],
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"type\": \"consent\",\n  \"originalName\": \"consentimiento.pdf\",\n  \"mimeType\": \"application/pdf\",\n  \"description\": \"Consentimiento informado\",\n  \"tags\": [\"consentimiento\", \"cirugia\"],\n  \"isPublic\": false,\n  \"size\": 1024000\n}"
-                },
-                "url": {
-                  "raw": "{{file_base_url}}/files/presign",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "presign"]
-                },
-                "description": "Obtener URL de subida"
-              }
-            },
-            {
-              "name": "Confirm Upload",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"fileId\": \"{{file_id}}\",\n  \"etag\": \"d41d8cd98f00b204e9800998ecf8427e\"\n}"
-                },
-                "url": {
-                  "raw": "{{file_base_url}}/files/confirm-upload",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "confirm-upload"]
-                },
-                "description": "Confirmar subida de archivo"
-              }
-            },
-            {
-              "name": "Get All Files",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files"]
-                },
-                "description": "Obtener todos los archivos"
-              }
-            },
-            {
-              "name": "Get My Files",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files/my-files",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "my-files"]
-                },
-                "description": "Obtener mis archivos"
-              }
-            },
-            {
-              "name": "Get Files by Reservation",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files/reservation/{{reservation_id}}",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "reservation", "{{reservation_id}}"]
-                },
-                "description": "Obtener archivos por reserva"
-              }
-            },
-            {
-              "name": "Get File by ID",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files/{{file_id}}",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "{{file_id}}"]
-                },
-                "description": "Obtener archivo por ID"
-              }
-            },
-            {
-              "name": "Get Download URL",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files/{{file_id}}/download",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "{{file_id}}", "download"]
-                },
-                "description": "Obtener URL de descarga"
-              }
-            },
-            {
-              "name": "Delete File",
-              "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                  "raw": "{{file_base_url}}/files/{{file_id}}",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "{{file_id}}"]
-                },
-                "description": "Eliminar archivo"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "🧪 Test Scenarios",
-      "item": [
-        {
-          "name": "Complete Flow Test",
-          "item": [
-            {
-              "name": "1. Setup - Login",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"test@hospital.com\",\n  \"password\": \"Password123\"\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/login",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "login"]
-                },
-                "description": "Login inicial"
-              }
-            },
-            {
-              "name": "2. Create Operating Room",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"name\": \"Quirófano Test\",\n  \"description\": \"Quirófano para pruebas\",\n  \"location\": {\n    \"floor\": 1,\n    \"wing\": \"B\",\n    \"roomNumber\": \"OR-TEST-001\"\n  },\n  \"capacity\": {\n    \"maxPatients\": 1,\n    \"maxStaff\": 6\n  },\n  \"isActive\": true,\n  \"maxReservationsPerDay\": 4\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/operating-rooms",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["operating-rooms"]
-                },
-                "description": "Crear quirófano de prueba"
-              }
-            },
-            {
-              "name": "3. Create Reservation",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Idempotency-Key",
-                    "value": "test-flow-{{$timestamp}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-20T09:00:00Z\",\n  \"endTime\": \"2024-03-20T11:00:00Z\",\n  \"type\": \"surgery\",\n  \"description\": \"Cirugía de prueba\",\n  \"patientName\": \"Paciente Test\",\n  \"patientId\": \"TEST001\"\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations"]
-                },
-                "description": "Crear reserva de prueba"
-              }
-            },
-            {
-              "name": "4. Create File Presigned URL",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"type\": \"consent\",\n  \"originalName\": \"consentimiento_test.pdf\",\n  \"mimeType\": \"application/pdf\",\n  \"description\": \"Consentimiento de prueba\",\n  \"size\": 512000\n}"
-                },
-                "url": {
-                  "raw": "{{file_base_url}}/files/presign",
-                  "host": ["{{file_base_url}}"],
-                  "path": ["files", "presign"]
-                },
-                "description": "Crear URL de subida para archivo"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Error Handling Tests",
-          "item": [
-            {
-              "name": "Invalid Login",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"invalid@hospital.com\",\n  \"password\": \"wrongpassword\"\n}"
-                },
-                "url": {
-                  "raw": "{{auth_base_url}}/auth/login",
-                  "host": ["{{auth_base_url}}"],
-                  "path": ["auth", "login"]
-                },
-                "description": "Login con credenciales inválidas"
-              }
-            },
-            {
-              "name": "Create Reservation - Conflict",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Idempotency-Key",
-                    "value": "{{$randomUUID}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-20T10:00:00Z\",\n  \"endTime\": \"2024-03-20T12:00:00Z\",\n  \"type\": \"surgery\",\n  \"description\": \"Reserva con conflicto\"\n}"
-                },
-                "url": {
-                  "raw": "{{or_base_url}}/reservations",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations"]
-                },
-                "description": "Crear reserva con conflicto de horario"
-              }
-            },
-            {
-              "name": "Get Non-existent Resource",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{or_base_url}}/reservations/000000000000000000000000",
-                  "host": ["{{or_base_url}}"],
-                  "path": ["reservations", "000000000000000000000000"]
-                },
-                "description": "Obtener recurso inexistente"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "🔍 Health Checks",
-      "item": [
-        {
-          "name": "Auth Service Health",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{auth_base_url}}/auth/test",
-              "host": ["{{auth_base_url}}"],
-              "path": ["auth", "test"]
-            },
-            "description": "Verificar salud del Auth Service"
-          }
-        },
-        {
-          "name": "OR Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{or_base_url}}/reservations/admin/test",
-              "host": ["{{or_base_url}}"],
-              "path": ["reservations", "admin", "test"]
-            },
-            "description": "Verificar salud del OR Service"
-          }
-        },
-        {
-          "name": "File Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{file_base_url}}/files/admin/test",
-              "host": ["{{file_base_url}}"],
-              "path": ["files", "admin", "test"]
-            },
-            "description": "Verificar salud del File Service"
-          }
-        }
-      ]
-    }
-  ]
+	"info": {
+		"_postman_id": "67decc77-e3bf-449b-b870-fd61decf7763",
+		"name": "Complete API Testing - All Services",
+		"description": "Colección completa para probar todos los servicios: Auth, OR Service y File Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9003030"
+	},
+	"item": [
+		{
+			"name": "🔐 Auth Service",
+			"item": [
+				{
+					"name": "1. Setup - Authentication",
+					"item": [
+						{
+							"name": "Register User",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.collectionVariables.set('user_id', response.user.id);",
+											"    console.log('User ID guardado:', response.user.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"test@hospital.com\",\n  \"password\": \"Password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"role\": \"surgeon\"\n}"
+								},
+								"url": {
+									"raw": "{{auth_base_url}}/auth/register",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"auth",
+										"register"
+									]
+								},
+								"description": "Registrar un nuevo usuario"
+							},
+							"response": []
+						},
+						{
+							"name": "Login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const response = pm.response.json();",
+											"    pm.collectionVariables.set('access_token', response.accessToken);",
+											"    pm.collectionVariables.set('refresh_token', response.refreshToken);",
+											"    pm.collectionVariables.set('user_id', response.user.id);",
+											"    console.log('Tokens guardados');",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"test@hospital.com\",\n  \"password\": \"Password123\"\n}"
+								},
+								"url": {
+									"raw": "{{auth_base_url}}/auth/login",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								},
+								"description": "Login para obtener tokens"
+							},
+							"response": []
+						},
+						{
+							"name": "Refresh Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+								},
+								"url": {
+									"raw": "{{auth_base_url}}/auth/refresh",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"auth",
+										"refresh"
+									]
+								},
+								"description": "Renovar token de acceso"
+							},
+							"response": []
+						},
+						{
+							"name": "Logout",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{auth_base_url}}/auth/logout",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"auth",
+										"logout"
+									]
+								},
+								"description": "Cerrar sesión"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "2. User Management",
+					"item": [
+						{
+							"name": "Get All Users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{auth_base_url}}/users",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"users"
+									]
+								},
+								"description": "Obtener todos los usuarios (admin/scheduler)"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Current User",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{auth_base_url}}/users/me",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"users",
+										"me"
+									]
+								},
+								"description": "Obtener usuario actual"
+							},
+							"response": []
+						},
+						{
+							"name": "Get User by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{auth_base_url}}/users/{{user_id}}",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								},
+								"description": "Obtener usuario por ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update User",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"firstName\": \"Test Updated\",\n  \"lastName\": \"User Updated\",\n  \"isActive\": true\n}"
+								},
+								"url": {
+									"raw": "{{auth_base_url}}/users/{{user_id}}",
+									"host": [
+										"{{auth_base_url}}"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								},
+								"description": "Actualizar usuario (solo admin)"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🏥 OR Service",
+			"item": [
+				{
+					"name": "1. Operating Rooms",
+					"item": [
+						{
+							"name": "Create Operating Room",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.collectionVariables.set('operating_room_id', response.id);",
+											"    console.log('Operating Room ID guardado:', response.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Quirófano Principal\",\n  \"description\": \"Quirófano principal para cirugías generales\",\n  \"location\": {\n    \"floor\": 2,\n    \"wing\": \"A\",\n    \"roomNumber\": \"OR-201\"\n  },\n  \"capacity\": {\n    \"maxPatients\": 1,\n    \"maxStaff\": 8\n  },\n  \"equipment\": [\n    {\n      \"name\": \"Monitor de signos vitales\",\n      \"type\": \"monitoring\",\n      \"isRequired\": true\n    },\n    {\n      \"name\": \"Máquina de anestesia\",\n      \"type\": \"anesthesia\",\n      \"isRequired\": true\n    }\n  ],\n  \"isActive\": true,\n  \"maxReservationsPerDay\": 4\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/operating-rooms",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"operating-rooms"
+									]
+								},
+								"description": "Crear un quirófano"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Operating Rooms",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const response = pm.response.json();",
+											"    if (response.length > 0 && !pm.collectionVariables.get('operating_room_id')) {",
+											"        pm.collectionVariables.set('operating_room_id', response[0].id);",
+											"        console.log('Operating Room ID guardado:', response[0].id);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/operating-rooms",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"operating-rooms"
+									]
+								},
+								"description": "Obtener todos los quirófanos"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Operating Room by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/operating-rooms/{{operating_room_id}}",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"operating-rooms",
+										"{{operating_room_id}}"
+									]
+								},
+								"description": "Obtener quirófano por ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Operating Room",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Quirófano Principal - Actualizado\",\n  \"isActive\": true,\n  \"maxReservationsPerDay\": 6\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/operating-rooms/{{operating_room_id}}",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"operating-rooms",
+										"{{operating_room_id}}"
+									]
+								},
+								"description": "Actualizar quirófano"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "2. Reservations",
+					"item": [
+						{
+							"name": "Check Availability",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-15T09:00:00Z\",\n  \"endTime\": \"2024-03-15T11:00:00Z\"\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/reservations/check-availability",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"check-availability"
+									]
+								},
+								"description": "Verificar disponibilidad"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Reservation - Surgery",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.collectionVariables.set('reservation_id', response.id);",
+											"    console.log('Reservation ID guardado:', response.id);",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Idempotency-Key",
+										"value": "{{$randomUUID}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2026-03-15T09:00:00Z\",\n  \"endTime\": \"2027-03-15T11:00:00Z\",\n  \"type\": \"surgery\",\n  \"description\": \"Cirugía de apendicectomía\",\n  \"patientName\": \"Ana García\",\n  \"patientId\": \"P123456\",\n  \"notes\": \"Paciente con alergia a penicilina\",\n  \"isRecurring\": false\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/reservations",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations"
+									]
+								},
+								"description": "Crear reserva de cirugía"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Reservation - Consultation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Idempotency-Key",
+										"value": "{{$randomUUID}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operatingRoomId\": \"{{operating_room_id}}\",\n  \"surgeonId\": \"{{user_id}}\",\n  \"startTime\": \"2024-03-15T14:00:00Z\",\n  \"endTime\": \"2024-03-15T15:00:00Z\",\n  \"type\": \"consultation\",\n  \"description\": \"Consulta preoperatoria\",\n  \"patientName\": \"Carlos López\",\n  \"patientId\": \"P789012\",\n  \"notes\": \"Primera consulta\",\n  \"isRecurring\": false\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/reservations",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations"
+									]
+								},
+								"description": "Crear reserva de consulta"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Reservations",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/reservations",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations"
+									]
+								},
+								"description": "Obtener todas las reservas"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Reservations",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/reservations/my-reservations",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"my-reservations"
+									]
+								},
+								"description": "Obtener mis reservas"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Reservation by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/reservations/{{reservation_id}}",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"{{reservation_id}}"
+									]
+								},
+								"description": "Obtener reserva por ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Reservation",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"startTime\": \"2028-03-15T10:00:00Z\",\n  \"endTime\": \"2028-03-15T12:00:00Z\",\n  \"description\": \"Cirugía de apendicectomía - Horario actualizado\",\n  \"notes\": \"Horario modificado por solicitud del paciente\"\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/reservations/{{reservation_id}}",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"{{reservation_id}}"
+									]
+								},
+								"description": "Actualizar reserva"
+							},
+							"response": []
+						},
+						{
+							"name": "Confirm Reservation",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"confirmed\",\n  \"notes\": \"Reserva confirmada por el cirujano\"\n}"
+								},
+								"url": {
+									"raw": "{{or_base_url}}/reservations/{{reservation_id}}",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"{{reservation_id}}"
+									]
+								},
+								"description": "Confirmar reserva"
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel Reservation",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{or_base_url}}/reservations/{{reservation_id}}?reason=Paciente canceló la cita",
+									"host": [
+										"{{or_base_url}}"
+									],
+									"path": [
+										"reservations",
+										"{{reservation_id}}"
+									],
+									"query": [
+										{
+											"key": "reason",
+											"value": "Paciente canceló la cita"
+										}
+									]
+								},
+								"description": "Cancelar reserva"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📁 File Service",
+			"item": [
+				{
+					"name": "1. File Management",
+					"item": [
+						{
+							"name": "Create Presigned URL",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const response = pm.response.json();",
+											"    pm.collectionVariables.set('file_id', response.fileId);",
+											"    console.log('File ID guardado:', response.fileId);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"type\": \"consent\",\n  \"originalName\": \"consentimiento.pdf\",\n  \"mimeType\": \"application/pdf\",\n  \"description\": \"Consentimiento informado\",\n  \"tags\": [\"consentimiento\", \"cirugia\"],\n  \"isPublic\": false,\n  \"size\": 1024000\n}"
+								},
+								"url": {
+									"raw": "{{file_base_url}}/files/presign",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"presign"
+									]
+								},
+								"description": "Obtener URL de subida"
+							},
+							"response": []
+						},
+						{
+							"name": "Confirm Upload",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fileId\": \"{{file_id}}\",\n  \"etag\": \"d41d8cd98f00b204e9800998ecf8427e\"\n}"
+								},
+								"url": {
+									"raw": "{{file_base_url}}/files/confirm-upload",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"confirm-upload"
+									]
+								},
+								"description": "Confirmar subida de archivo"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Files",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files"
+									]
+								},
+								"description": "Obtener todos los archivos"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Files",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files/my-files",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"my-files"
+									]
+								},
+								"description": "Obtener mis archivos"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Files by Reservation",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files/reservation/{{reservation_id}}",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"reservation",
+										"{{reservation_id}}"
+									]
+								},
+								"description": "Obtener archivos por reserva"
+							},
+							"response": []
+						},
+						{
+							"name": "Get File by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files/{{file_id}}",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"{{file_id}}"
+									]
+								},
+								"description": "Obtener archivo por ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Download URL",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files/{{file_id}}/download",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"{{file_id}}",
+										"download"
+									]
+								},
+								"description": "Obtener URL de descarga"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete File",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{file_base_url}}/files/{{file_id}}",
+									"host": [
+										"{{file_base_url}}"
+									],
+									"path": [
+										"files",
+										"{{file_id}}"
+									]
+								},
+								"description": "Eliminar archivo"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🔍 Health Checks",
+			"item": [
+				{
+					"name": "Auth Service Health",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{auth_base_url}}/auth/test",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"auth",
+								"test"
+							]
+						},
+						"description": "Verificar salud del Auth Service"
+					},
+					"response": []
+				},
+				{
+					"name": "OR Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{or_base_url}}/reservations/admin/test",
+							"host": [
+								"{{or_base_url}}"
+							],
+							"path": [
+								"reservations",
+								"admin",
+								"test"
+							]
+						},
+						"description": "Verificar salud del OR Service"
+					},
+					"response": []
+				},
+				{
+					"name": "File Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{file_base_url}}/files/admin/test",
+							"host": [
+								"{{file_base_url}}"
+							],
+							"path": [
+								"files",
+								"admin",
+								"test"
+							]
+						},
+						"description": "Verificar salud del File Service"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "auth_base_url",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "or_base_url",
+			"value": "http://localhost:3002",
+			"type": "string"
+		},
+		{
+			"key": "file_base_url",
+			"value": "http://localhost:3003",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "operating_room_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reservation_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "file_id",
+			"value": "",
+			"type": "string"
+		}
+	]
 }
