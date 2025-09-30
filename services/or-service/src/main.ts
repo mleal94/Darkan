@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { Transport } from '@nestjs/microservices';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +22,11 @@ async function bootstrap(): Promise<void> {
     origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+    credentials: true,
   });
+
+  // Configurar Socket.IO adapter
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Configurar gRPC microservice
   const grpcApp = await NestFactory.createMicroservice(AppModule, {
@@ -42,6 +47,9 @@ async function bootstrap(): Promise<void> {
 
   console.log(`🚀 OR Service HTTP running on port ${httpPort}`);
   console.log(`🚀 OR Service gRPC running on port ${process.env.OR_SERVICE_GRPC_PORT || 5002}`);
+  console.log(`🔌 WebSocket Server running on: ws://localhost:${httpPort}/reservations`);
+  console.log(`🔌 WebSocket Namespace: /reservations`);
+  console.log(`🔌 WebSocket CORS: ${process.env.CORS_ORIGIN || '*'}`);
 }
 
 bootstrap().catch((error) => {

@@ -6,45 +6,48 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { UseGuards } from '@nestjs/common';
-import { WsJwtGuard } from './guards/ws-jwt.guard';
+// JWT y autenticación removidos - WebSocket sin autenticación
 
 @WebSocketGateway({
+  namespace: '/reservations',
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: '*',
+    methods: ['GET', 'POST'],
     credentials: true,
   },
-  namespace: '/reservations',
 })
-export class ReservationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+ export class ReservationsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   private connectedUsers = new Map<string, string>(); // socketId -> userId
 
-  constructor(private jwtService: JwtService) {}
+  constructor() {
+    console.log('🔌 WebSocket Gateway initialized for namespace: /reservations (no authentication)');
+  }
+
+  afterInit(server: Server) {
+    const port = process.env.OR_SERVICE_PORT || 3002;
+    const namespace = '/reservations';
+    console.log('🔌 WebSocket Server initialized and ready for connections');
+    console.log(`🔌 WebSocket URL: ws://localhost:${port}${namespace}`);
+    console.log(`🔌 WebSocket Port: ${port}`);
+    console.log(`🔌 WebSocket Namespace: ${namespace}`);
+  }
 
   async handleConnection(client: Socket): Promise<void> {
     try {
-      const token = client.handshake.auth.token || client.handshake.headers.authorization?.replace('Bearer ', '');
+      console.log('🔌 WebSocket connection attempt from:', client.handshake.address);
       
-      if (!token) {
-        client.disconnect();
-        return;
-      }
-
-      const payload = this.jwtService.verify(token);
-      this.connectedUsers.set(client.id, payload.sub);
+      // Conexión sin autenticación - todos los usuarios son anónimos
+      this.connectedUsers.set(client.id, 'anonymous');
+      console.log('👤 User connected via WebSocket (no authentication required)');
       
-      // Unir al usuario a una sala personalizada
-      client.join(`user:${payload.sub}`);
-      
-      console.log(`User ${payload.sub} connected via WebSocket`);
     } catch (error) {
-      console.error('WebSocket authentication failed:', error);
+      console.error('❌ WebSocket connection failed:', error);
       client.disconnect();
     }
   }
@@ -52,17 +55,17 @@ export class ReservationsGateway implements OnGatewayConnection, OnGatewayDiscon
   handleDisconnect(client: Socket): void {
     const userId = this.connectedUsers.get(client.id);
     if (userId) {
-      console.log(`User ${userId} disconnected from WebSocket`);
+      console.log(`👋 User ${userId} disconnected from WebSocket`);
       this.connectedUsers.delete(client.id);
     }
   }
 
   @SubscribeMessage('join_room')
-  @UseGuards(WsJwtGuard)
   handleJoinRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ): void {
+    console.log('🚪 User joining room:', data.roomId);
     client.join(`room:${data.roomId}`);
     client.emit('joined_room', { roomId: data.roomId });
   }
@@ -72,13 +75,18 @@ export class ReservationsGateway implements OnGatewayConnection, OnGatewayDiscon
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ): void {
+    console.log('🚪 User leaving room:', data.roomId);
     client.leave(`room:${data.roomId}`);
     client.emit('left_room', { roomId: data.roomId });
   }
 
   @SubscribeMessage('ping')
   handlePing(@ConnectedSocket() client: Socket): void {
-    client.emit('pong', { timestamp: new Date().toISOString() });
+    console.log('🏓 Ping received from client:', client.id);
+    client.emit('pong', { 
+      timestamp: new Date().toISOString(),
+      message: 'pong from server'
+    });
   }
 
   // Métodos para emitir eventos a los clientes conectados
