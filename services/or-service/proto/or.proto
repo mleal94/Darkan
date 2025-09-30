@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package or;
+
+service ORService {
+  rpc GetOperatingRoomById(GetOperatingRoomByIdRequest) returns (GetOperatingRoomResponse);
+  rpc GetReservationById(GetReservationByIdRequest) returns (GetReservationResponse);
+  rpc CheckAvailability(CheckAvailabilityRequest) returns (CheckAvailabilityResponse);
+  rpc ValidateReservation(ValidateReservationRequest) returns (ValidateReservationResponse);
+}
+
+message GetOperatingRoomByIdRequest {
+  string operatingRoomId = 1;
+}
+
+message GetOperatingRoomResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool isActive = 4;
+  bool isMaintenance = 5;
+  int32 currentReservations = 6;
+  int32 maxReservationsPerDay = 7;
+}
+
+message GetReservationByIdRequest {
+  string reservationId = 1;
+}
+
+message GetReservationResponse {
+  string id = 1;
+  string operatingRoomId = 2;
+  string surgeonId = 3;
+  int64 startTime = 4;
+  int64 endTime = 5;
+  string status = 6;
+  string type = 7;
+  string description = 8;
+  string patientName = 9;
+  string patientId = 10;
+  string notes = 11;
+  bool isRecurring = 12;
+  string recurringPattern = 13;
+  string parentReservationId = 14;
+  int32 version = 15;
+}
+
+message CheckAvailabilityRequest {
+  string operatingRoomId = 1;
+  string surgeonId = 2;
+  int64 startTime = 3;
+  int64 endTime = 4;
+}
+
+message CheckAvailabilityResponse {
+  bool available = 1;
+  repeated ReservationConflict conflicts = 2;
+}
+
+message ReservationConflict {
+  string reservationId = 1;
+  int64 startTime = 2;
+  int64 endTime = 3;
+  string surgeonId = 4;
+}
+
+message ValidateReservationRequest {
+  string operatingRoomId = 1;
+  string surgeonId = 2;
+  int64 startTime = 3;
+  int64 endTime = 4;
+  string excludeReservationId = 5;
+}
+
+message ValidateReservationResponse {
+  bool valid = 1;
+  string message = 2;
+}
