@@ -142,10 +142,11 @@ npm run start
 
 ## 📚 API Endpoints
 
-### Auth Service
+### Auth Service (Puerto 3001)
 
+#### Autenticación
 ```bash
-# Registro
+# Registro (sin tokens)
 POST /auth/register
 {
   "email": "user@hospital.com",
@@ -167,12 +168,101 @@ POST /auth/refresh
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
+
+# Logout
+POST /auth/logout
+Headers: { "Authorization": "Bearer <token>" }
+
+# Test endpoint
+POST /auth/test
 ```
 
-### OR Service
-
+#### Gestión de Usuarios
 ```bash
-# Crear Reserva
+# Crear usuario (solo admin)
+POST /users
+Headers: { "Authorization": "Bearer <token>" }
+{
+  "email": "user@hospital.com",
+  "password": "password123",
+  "firstName": "Juan",
+  "lastName": "Pérez",
+  "role": "surgeon"
+}
+
+# Obtener todos los usuarios (admin/scheduler)
+GET /users
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener usuario actual
+GET /users/me
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener usuario por ID (admin/scheduler)
+GET /users/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Actualizar usuario (solo admin)
+PATCH /users/:id
+Headers: { "Authorization": "Bearer <token>" }
+{
+  "firstName": "Juan Carlos",
+  "lastName": "Pérez García"
+}
+
+# Eliminar usuario (solo admin)
+DELETE /users/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Test endpoint
+GET /users/admin/test
+```
+
+### OR Service (Puerto 3002)
+
+#### Quirófanos
+```bash
+# Crear quirófano (admin/scheduler)
+POST /operating-rooms
+Headers: { "Authorization": "Bearer <token>" }
+{
+  "name": "Quirófano 1",
+  "description": "Quirófano principal",
+  "equipment": ["Monitor", "Anestesia"],
+  "capacity": 8
+}
+
+# Obtener todos los quirófanos
+GET /operating-rooms
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener quirófanos activos
+GET /operating-rooms/active
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener quirófano por ID
+GET /operating-rooms/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Actualizar quirófano (admin/scheduler)
+PATCH /operating-rooms/:id
+Headers: { "Authorization": "Bearer <token>" }
+{
+  "name": "Quirófano 1 - Actualizado",
+  "isActive": true
+}
+
+# Eliminar quirófano (solo admin)
+DELETE /operating-rooms/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Test endpoint
+GET /operating-rooms/admin/test
+```
+
+#### Reservas
+```bash
+# Crear reserva
 POST /reservations
 Headers: {
   "Authorization": "Bearer <token>",
@@ -188,21 +278,60 @@ Headers: {
   "patientName": "Ana García"
 }
 
-# Verificar Disponibilidad
+# Verificar disponibilidad
 POST /reservations/check-availability
+Headers: { "Authorization": "Bearer <token>" }
 {
   "operatingRoomId": "64f1a2b3c4d5e6f7g8h9i0j1",
   "surgeonId": "64f1a2b3c4d5e6f7g8h9i0j2",
   "startTime": "2024-01-15T09:00:00Z",
   "endTime": "2024-01-15T11:00:00Z"
 }
+
+# Obtener todas las reservas (admin/scheduler)
+GET /reservations
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener mis reservas
+GET /reservations/my-reservations
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener reservas por quirófano (admin/scheduler)
+GET /reservations/operating-room/:operatingRoomId
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener reservas por cirujano (admin/scheduler)
+GET /reservations/surgeon/:surgeonId
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener reserva por ID
+GET /reservations/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Actualizar reserva (admin/scheduler)
+PATCH /reservations/:id
+Headers: { "Authorization": "Bearer <token>" }
+{
+  "startTime": "2024-01-15T10:00:00Z",
+  "endTime": "2024-01-15T12:00:00Z",
+  "description": "Descripción actualizada"
+}
+
+# Cancelar reserva (admin/scheduler)
+DELETE /reservations/:id?reason=Motivo de cancelación
+Headers: { "Authorization": "Bearer <token>" }
+
+# Test endpoint
+GET /reservations/admin/test
 ```
 
-### File Service
+### File Service (Puerto 3003)
 
+#### Gestión de Archivos
 ```bash
-# Obtener URL de Subida
+# Obtener URL de subida
 POST /files/presign
+Headers: { "Authorization": "Bearer <token>" }
 {
   "reservationId": "64f1a2b3c4d5e6f7g8h9i0j3",
   "type": "consent",
@@ -211,12 +340,40 @@ POST /files/presign
   "description": "Consentimiento informado"
 }
 
-# Confirmar Subida
+# Confirmar subida
 POST /files/confirm-upload
+Headers: { "Authorization": "Bearer <token>" }
 {
   "fileId": "64f1a2b3c4d5e6f7g8h9i0j4",
   "etag": "d41d8cd98f00b204e9800998ecf8427e"
 }
+
+# Obtener todos los archivos (admin/scheduler)
+GET /files
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener mis archivos
+GET /files/my-files
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener archivos por reserva
+GET /files/reservation/:reservationId
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener archivo por ID
+GET /files/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Obtener URL de descarga
+GET /files/:id/download
+Headers: { "Authorization": "Bearer <token>" }
+
+# Eliminar archivo
+DELETE /files/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+# Test endpoint
+GET /files/admin/test
 ```
 
 ## 🔐 Autenticación y Roles
