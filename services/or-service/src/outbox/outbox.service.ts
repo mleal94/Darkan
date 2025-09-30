@@ -120,4 +120,45 @@ export class OutboxService {
       await event.save();
     }
   }
+
+  async cleanupCompletedEvents(): Promise<void> {
+    // Limpiar eventos completados más antiguos de 24 horas
+    const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const result = await this.outboxEventModel.deleteMany({
+      status: OutboxEventStatus.COMPLETED,
+      processedAt: { $lt: cutoffDate },
+    }).exec();
+
+    console.log(`Cleaned up ${result.deletedCount} completed outbox events`);
+  }
+
+  async getOutboxStats(): Promise<{
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+  }> {
+    const stats = await this.outboxEventModel.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]).exec();
+
+    const result = {
+      pending: 0,
+      processing: 0,
+      completed: 0,
+      failed: 0,
+    };
+
+    stats.forEach(stat => {
+      result[stat._id] = stat.count;
+    });
+
+    return result;
+  }
 }
